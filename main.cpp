@@ -906,7 +906,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	///ModelResourceを生成
 	///-------------------------------------------///
 	/// ===モデルデータの読み込み=== ///
-	ModelData modelData = LoadObjFile("resources", "axis.obj");
+	ModelData modelData = LoadObjFile("resources/fence", "fence.obj");
 	/// ===頂点リソースを作る=== ///
 	Microsoft::WRL::ComPtr <ID3D12Resource> vertexResource = CreateBufferResource(DXManager->GetDevice().Get(), sizeof(VertexData) * modelData.vertices.size());
 	/// ===頂点バッファビューを作成する=== ///
@@ -1333,7 +1333,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
 			}
 			/// ===カメラ処理=== ///
-			transform.rotate.y += 0.001f;
+			transform.rotate.y = -3.01f;
+			transform.rotate.x = 0.5f;
 			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			transformationMatrix.World = worldMatrix;
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);

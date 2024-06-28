@@ -42,6 +42,10 @@ PixelShaderOutput main(VertexShaderOutput input){
     else{//Lightngを使用しない場合
         output.color = gMaterial.color * textureColor;
     }
+    //透明にするべきところを判断
+    if (textureColor.a == 0.0 || textureColor.a <= 0.5 || output.color.a == 0.0){
+        discard;
+    }
     
     return output;
 }
