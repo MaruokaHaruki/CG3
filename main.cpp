@@ -382,22 +382,22 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(Microsoft::WRL::ComPtr <ID3D1
 ///mtlファイルの読み込み
 ///=====================================================///
 MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
-    MaterialData materialData;
-    std::string line;
-    std::ifstream file(directoryPath + "/" + filename);
+	MaterialData materialData;
+	std::string line;
+	std::ifstream file(directoryPath + "/" + filename);
 
-    while (std::getline(file, line)) {
-        std::string identifier;
-        std::istringstream s(line);
-        s >> identifier;
+	while (std::getline(file, line)) {
+		std::string identifier;
+		std::istringstream s(line);
+		s >> identifier;
 
-        if (identifier == "map_Kd") {
-            std::string textureFilename;
-            s >> textureFilename;
-            materialData.textureFilePath = directoryPath + "/" + textureFilename;
-        }
-    }
-    return materialData;
+		if (identifier == "map_Kd") {
+			std::string textureFilename;
+			s >> textureFilename;
+			materialData.textureFilePath = directoryPath + "/" + textureFilename;
+		}
+	}
+	return materialData;
 }
 
 
@@ -496,7 +496,6 @@ struct D3DResourceLeakCheker {
 	}
 };
 
-
 ///==============================================///
 ///Windowsアプリでのエントリーポイント(main関数)
 ///==============================================///
@@ -507,7 +506,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	///----------------------------------------///
 	WinApp* win = new WinApp;
 	win->CreateGameWindow(L"CG3");
-	
+
 
 	///-------------------------------------------/// 
 	///リークチェック
@@ -521,7 +520,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	DirectXManager* DXManager = new DirectXManager;
 	//ダイレクトXの初期化
 	DXManager->InitializeDirectX(win->GetWindowWidth(), win->GetWindowHeight(), win->GetWindowHandle());
-	
+
 
 	///----------------------------------------///
 	//DescriptorHeapのサイズを取得
@@ -631,6 +630,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature)));
 	assert(SUCCEEDED(DXManager->GetHr()));
 
+
 	/// ===InputLayoutの設定を行う=== ///
 	//InputLayout
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
@@ -654,19 +654,75 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	inputLayoutDesc.pInputElementDescs = inputElementDescs;
 	inputLayoutDesc.NumElements = _countof(inputElementDescs);
 
+
 	/// ===BlendStateの設定を行う=== ///
-	//BlandState
-	D3D12_BLEND_DESC blendDesc{};
+	///NormalBlend(ノーマル)
+	D3D12_BLEND_DESC normalBlendDesc{};
 	//すべての色要素を書き込む
 	//TODO:CG3で追加。アルファ値が変更できる
-	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-	blendDesc.RenderTarget[0].BlendEnable = TRUE;
-	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	normalBlendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	normalBlendDesc.RenderTarget[0].BlendEnable = TRUE;
+	//Normal
+	normalBlendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	normalBlendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	normalBlendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	normalBlendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	normalBlendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	normalBlendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+
+	///AddBlend(加算合成)
+	D3D12_BLEND_DESC addBlendDesc{};
+	//すべての色要素を書き込む
+	addBlendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	addBlendDesc.RenderTarget[0].BlendEnable = TRUE;
+	//Add
+	addBlendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	addBlendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	addBlendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+	addBlendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	addBlendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	addBlendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+
+	///SubtractBlend(減算)
+	D3D12_BLEND_DESC subtractBlendDesc{};
+	//すべての色要素を書き込む
+	subtractBlendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	subtractBlendDesc.RenderTarget[0].BlendEnable = TRUE;
+	//Subtract
+	subtractBlendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	subtractBlendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_SUBTRACT;
+	subtractBlendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+	subtractBlendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	subtractBlendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	subtractBlendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+
+	///MultiplyBlend(乗算)
+	D3D12_BLEND_DESC multiplyBlendDesc{};
+	//すべての色要素を書き込む
+	multiplyBlendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	multiplyBlendDesc.RenderTarget[0].BlendEnable = TRUE;
+	//Multiply
+	multiplyBlendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_ZERO;
+	multiplyBlendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	multiplyBlendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_SRC_COLOR;
+	multiplyBlendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	multiplyBlendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	multiplyBlendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+
+	///ScreenBlend(乗算)
+	D3D12_BLEND_DESC screenBlendDesc{};
+	//すべての色要素を書き込む
+	multiplyBlendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	multiplyBlendDesc.RenderTarget[0].BlendEnable = TRUE;
+	//Screen
+	multiplyBlendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_INV_DEST_COLOR;
+	multiplyBlendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	multiplyBlendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+	multiplyBlendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	multiplyBlendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	multiplyBlendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+
+
 
 	/// ===RasterrizerStateの設定を行う=== ///
 	//RasterrizerState
@@ -693,7 +749,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		vertexShaderBlob->GetBufferSize() };
 	graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),
 	pixelShaderBlob->GetBufferSize() };
-	graphicsPipelineStateDesc.BlendState = blendDesc;
+	graphicsPipelineStateDesc.BlendState = normalBlendDesc;
 	graphicsPipelineStateDesc.RasterizerState = rasterizerDesc;
 	//書き込むRTVの情報
 	graphicsPipelineStateDesc.NumRenderTargets = 1;
@@ -1170,6 +1226,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	{0.0f,0.0f,0.0f},
 	};
 
+	// ImGuiでブレンドモードを選択するための変数
+	int currentBlendMode = 0;
+	// 前回のブレンドモードを保持する変数
+	int previousBlendMode = -1;
+	const char* blendModeItems[] = { "Normal", "Add", "Subtract", "Multiply", "Screen" };
+	enum blendMode {
+		kBlendModeNormal,
+		kBlendModeAdd,
+		kBlendModeSubtract,
+		kBlendModeMultiply,
+		kBlendModeScreen,
+	};
+
 	///========================================///
 	//メインループ
 	///========================================///
@@ -1179,6 +1248,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		} else {
+
+			///-------------------------------------------/// 
+			///ImGui
+			///-------------------------------------------///
 			// ImGuiのフレーム開始
 			ImGui_ImplDX12_NewFrame();
 			ImGui_ImplWin32_NewFrame();
@@ -1192,6 +1265,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			*materialData = material;
 			// 空白とセパレータ
 			ImGui::Dummy(ImVec2(0.0f, 10.0f));
+			ImGui::Combo("Blend Mode", &currentBlendMode, blendModeItems, IM_ARRAYSIZE(blendModeItems));
+			// 現在のブレンドモードを表示
+			ImGui::Text("Current Blend Mode: %s", blendModeItems[currentBlendMode]);
 			ImGui::Separator();
 
 			ImGui::Text("DirectionalLighting");
@@ -1234,20 +1310,42 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::End();
 
 
-
-			/// ====ゲーム処理==== ///
-			//カメラ処理
+			///-------------------------------------------/// 
+			///ゲーム処理
+			///-------------------------------------------///
+			/// ===ブレンドモードの設定=== /// 
+			//ノーマル
+			if (previousBlendMode != currentBlendMode) {
+				if (currentBlendMode == blendMode::kBlendModeNormal) {
+					graphicsPipelineStateDesc.BlendState = normalBlendDesc;
+					//加算
+				} else if (currentBlendMode == blendMode::kBlendModeAdd) {
+					graphicsPipelineStateDesc.BlendState = addBlendDesc;
+					//減算
+				} else if (currentBlendMode == blendMode::kBlendModeSubtract) {
+					graphicsPipelineStateDesc.BlendState = subtractBlendDesc;
+					//乗算
+				} else if (currentBlendMode == blendMode::kBlendModeMultiply) {
+					graphicsPipelineStateDesc.BlendState = multiplyBlendDesc;
+					//スクリーン
+				} else if (currentBlendMode == blendMode::kBlendModeScreen) {
+					graphicsPipelineStateDesc.BlendState = screenBlendDesc;
+				}
+			}
+			/// ===カメラ処理=== ///
 			transform.rotate.y += 0.001f;
 			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			transformationMatrix.World = worldMatrix;
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 			Matrix4x4 viewMatrix = InverseMatrix(cameraMatrix);
-			//3Dオブジェクト処理
+
+			/// ===3Dオブジェクト処理=== ///
 			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(win->GetWindowWidth()) / float(win->GetWindowHeight()), 0.1f, 100.0f);
 			Matrix4x4 worldViewProjectionMatrix = MultiplyMatrix(worldMatrix, MultiplyMatrix(viewMatrix, projectionMatrix));
 			transformationMatrix.WVP = worldViewProjectionMatrix;
 			*transformationMatrixData = transformationMatrix;
-			//2Dオブジェクト処理
+
+			/// ===2Dオブジェクト処理=== ///
 			//sprite用のWorldViewProjectionMatrixを作る
 			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
 			transformationMatrixSprite.World = worldMatrixSprite;
@@ -1264,6 +1362,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			materialData->uvTransform = IdentityMatrix();
 
+
+
+
+			///-------------------------------------------/// 
+			///コマンド
+			///-------------------------------------------///
 			/// ====ImGuiの内部コマンド生成==== ///
 			ImGui::Render();
 
@@ -1275,13 +1379,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 描画ターゲットの設定とクリア
 			DXManager->RenderTargetPreference(dsvHandle);
 
-
-
 			// ImGuiの描画用DescriptorHeap設定
-			ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get()};
+			ID3D12DescriptorHeap* descriptorHeaps[] = { srvDescriptorHeap.Get() };
 			DXManager->GetCommandList()->SetDescriptorHeaps(1, descriptorHeaps);
 
 			/// ====コマンドを積む==== ///
+			// PSOの更新
+			if (previousBlendMode != currentBlendMode) {
+				DXManager->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
+				// 前回のブレンドモードを更新
+				previousBlendMode = currentBlendMode;
+			}
+
 			///3D描画
 			DXManager->GetCommandList()->RSSetViewports(1, &viewport);
 			DXManager->GetCommandList()->RSSetScissorRects(1, &scissorRect);
