@@ -798,7 +798,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	///----------------------------------------///
-	//VettexResourceSpriteを生成(スプライト用)
+	///VettexResourceSpriteを生成(スプライト用)
 	///----------------------------------------///
 	/// ===頂点リソースの作成=== ///
 	//NOTE:一般的にこれらのデータはオブジェクト事に必要である
@@ -845,7 +845,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexDataSprite[5].normal = { 0.0f,0.0f,-1.0f };
 
 	///----------------------------------------///
-	//VettexResourceSpriteを生成(スプライト用)
+	///VettexResourceSpriteを生成(スプライト用)
 	///----------------------------------------///
 	/// ===頂点リソースの作成=== ///
 	Microsoft::WRL::ComPtr <ID3D12Resource> indexResourceSprite = CreateBufferResource(DXManager->GetDevice().Get(), sizeof(uint32_t) * 6);
@@ -944,7 +944,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	*transformationMatrixData = transformationMatrix;
 
 	///----------------------------------------///
-	//Sprite用リソース Matrial4x4 1つ
+	///Sprite用リソース Matrial4x4 1つ
 	///----------------------------------------///
 	//wvp用のリソースを作る
 	Microsoft::WRL::ComPtr <ID3D12Resource> transformationMatrixResourceSprite = CreateBufferResource(DXManager->GetDevice().Get(), sizeof(TransformationMatrix));
@@ -1116,6 +1116,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		kBlendModeScreen,
 	};
 
+	///===描画枚数===///
+	int instanceCount = 10;
+
 	///========================================///
 	//メインループ
 	///========================================///
@@ -1285,9 +1288,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// DirectionalLight用のCBV設定 (b1)
 			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 			// 描画コマンド(頂点データ)
-			//DXManager->GetCommandList()->DrawInstanced(kNumVertices, 1, 0, 0);
+			DXManager->GetCommandList()->DrawInstanced(kNumVertices, 1, 0, 0);
 			// 描画コマンド(インデックスデータ)
-			//DXManager->GetCommandList()->DrawIndexedInstanced(kNumIndices, 1, 0, 0, 0);
+			DXManager->GetCommandList()->DrawIndexedInstanced(kNumIndices, 1, 0, 0, 0);
 			// 描画コマンド(モデルデータ)
 			DXManager->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
 
@@ -1326,43 +1329,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//開放処理
 	///----------------------------------------///
 
-	/// ===3Dオブジェクト描画=== ///
-	//vertexResource->Release();  // 頂点バッファリソースの解放
-	//indexResource->Release(); //頂点インデックスの解放
-	//graphicsPipelineState->Release();  // グラフィックスパイプラインステートの解放
-	//signatureBlob->Release();  // 署名バイナリの解放
-	//if (errorBlob) {
-		//errorBlob->Release();  // エラーメッセージバッファの解放
-	//}
-	//rootSignature->Release();  // ルートシグネチャの解放
-	//pixelShaderBlob->Release();  // ピクセルシェーダーバイナリの解放
-	//vertexShaderBlob->Release();  // 頂点シェーダーバイナリの解放
-
-	/// ===深度バッファ=== ///
-	//dsvDescriptorHeap->Release();  // 深度ステンシルビュー用ディスクリプタヒープの解放
-	//depthStencilResource->Release();  // 深度ステンシルバッファリソースの解放
-
-	/// ===マテリアル=== ///
-	//materialResource->Release();  // マテリアルリソースの解放
-
-	/// ===並行光源=== ///
-	//directionalLightResource->Release();
-
-	/// ===wvp=== ///
-	//transformationMatrixResource->Release();  // ワールド・ビュー・プロジェクション行列リソースの解放
-
-	/// ===Resource(Texture)=== ///
-	//textureResource->Release();  // テクスチャリソースの解放
-	//textureResource2->Release();  // 2番目のテクスチャリソースの解放
-
-	/// ===スプライト=== ///
-	//transformationMatrixResourceSprite->Release();  // スプライト用変換行列リソースの解放
-	//materialResourceSprite->Release();  // スプライト用マテリアルリソースの解放
-	//vertexResouceSprite->Release();  // スプライト用頂点バッファリソースの解放
-	//indexResourceSprite->Release();
-
 	/// ===ImGuiの終了処理=== ///
-	//srvDescriptorHeap->Release();  // シェーダーリソースビュー用ディスクリプタヒープの解放
 	ImGui_ImplDX12_Shutdown();  // ImGuiのDirectX12サポート終了
 	ImGui_ImplWin32_Shutdown();  // ImGuiのWin32サポート終了
 	ImGui::DestroyContext();  // ImGuiコンテキストの破棄
