@@ -824,6 +824,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	particleModelData.material.textureFilePath = "resources/uvChecker.png";
 	int instanceCount = 10;
 
+	/// ===Instancing用のResource=== ///
+	//TODO:
+	// wvp用のリソースを格納する配列
+	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource =
+		CreateBufferResource(DXManager->GetDevice().Get(), sizeof(TransformationMatrix) * instanceCount);
+	// データを書き込むためのポインタを格納する配列
+	TransformationMatrix* instancingData = nullptr;
+	// 書き込むためのアドレスを取得
+	instancingResource->Map(0, nullptr, reinterpret_cast<void**>( &instancingData ));
+
+	for (int i = 0; i < instanceCount; ++i) {
+		// 単位行列を書き込む
+		instancingData[i].WVP = IdentityMatrix();
+		instancingData[i].World = IdentityMatrix();
+	}
+
 
 	///----------------------------------------///
 	///VettexResourceSpriteを生成(スプライト用)
