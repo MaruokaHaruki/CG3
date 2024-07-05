@@ -796,6 +796,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>( &vertexData ));
 	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
 
+	///-------------------------------------------/// 
+	///particleModelDataを生成
+	///-------------------------------------------///
+	/// ===板モデルデータを作成===///
+	ModelData particleModelData;
+	particleModelData.vertices.push_back({ .position = {1.0f, 1.0f, 0.0f, 1.0f}, .texCoord = {0.0f, 0.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 左上
+	particleModelData.vertices.push_back({ .position = {-1.0f, 1.0f, 0.0f, 1.0f}, .texCoord = {1.0f, 0.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 右上
+	particleModelData.vertices.push_back({ .position = {1.0f, -1.0f, 0.0f, 1.0f}, .texCoord = {0.0f, 1.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 左下
+	particleModelData.vertices.push_back({ .position = {1.0f, -1.0f, 0.0f, 1.0f}, .texCoord = {0.0f, 1.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 左下
+	particleModelData.vertices.push_back({ .position = {-1.0f, 1.0f, 0.0f, 1.0f}, .texCoord = {1.0f, 0.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 右上
+	particleModelData.vertices.push_back({ .position = {-1.0f, -1.0f, 0.0f, 1.0f}, .texCoord = {1.0f, 1.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 右下
+	particleModelData.material.textureFilePath = "resources/uvChecker.png";
+	int instanceCount = 10;
+
 
 	///----------------------------------------///
 	///VettexResourceSpriteを生成(スプライト用)
@@ -845,7 +859,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexDataSprite[5].normal = { 0.0f,0.0f,-1.0f };
 
 	///----------------------------------------///
-	///VettexResourceSpriteを生成(スプライト用)
+	///indexVettexResourceSpriteを生成(スプライト用)
 	///----------------------------------------///
 	/// ===頂点リソースの作成=== ///
 	Microsoft::WRL::ComPtr <ID3D12Resource> indexResourceSprite = CreateBufferResource(DXManager->GetDevice().Get(), sizeof(uint32_t) * 6);
@@ -976,7 +990,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	DirectX::ScratchImage mipImages2 = LoadTexture(modelData.material.textureFilePath);
 	const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
 	Microsoft::WRL::ComPtr <ID3D12Resource> textureResource2 = CreateTextureResource(DXManager->GetDevice(), metadata2);
-	UploadTextureData(textureResource2, mipImages2);
+	UploadTextureData(textureResource2, mipImages2); particleModelData;
+
 
 
 	///----------------------------------------///
@@ -1081,6 +1096,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	///----------------------------------------///
 	//Transform変数を作る
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	transform.rotate.y = -2.5f;
 	//カメラの作成
 	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
 
@@ -1115,9 +1131,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		kBlendModeMultiply,
 		kBlendModeScreen,
 	};
-
-	///===描画枚数===///
-	int instanceCount = 10;
 
 	///========================================///
 	//メインループ
@@ -1213,8 +1226,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
 			}
 			/// ===カメラ処理=== ///
-			transform.rotate.y = -3.01f;
-			transform.rotate.x = 0.5f;
 			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			transformationMatrix.World = worldMatrix;
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
@@ -1284,15 +1295,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
 			//テクスチャの切り替え
-			DXManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, usaMonsterBall ? textureSrvHadleGPU2 : textureSrvHadleGPU);
+			//切り替え
+			//DXManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, usaMonsterBall ? textureSrvHadleGPU2 : textureSrvHadleGPU);
+			DXManager->GetCommandList()->SetGraphicsRootDescriptorTable(2,textureSrvHadleGPU);
 			// DirectionalLight用のCBV設定 (b1)
 			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+
 			// 描画コマンド(頂点データ)
-			DXManager->GetCommandList()->DrawInstanced(kNumVertices, 1, 0, 0);
+			//DXManager->GetCommandList()->DrawInstanced(kNumVertices, 1, 0, 0);
 			// 描画コマンド(インデックスデータ)
-			DXManager->GetCommandList()->DrawIndexedInstanced(kNumIndices, 1, 0, 0, 0);
+			//DXManager->GetCommandList()->DrawIndexedInstanced(kNumIndices, 1, 0, 0, 0);
 			// 描画コマンド(モデルデータ)
-			DXManager->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+			//DXManager->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+			DXManager->GetCommandList()->DrawInstanced(UINT(particleModelData.vertices.size()), 1, 0, 0);
 
 
 			///2D描画
