@@ -5,7 +5,7 @@ struct TransformationMatrix{
     float4x4 World;
 };
 
-ConstantBuffer<TransformationMatrix> gTransformationMatrix : register(b0);
+StructuredBuffer<TransformationMatrix> gTransformationMatrices : register(t0);
 
 struct VertexShaderInput{
     float4 position : POSITION0;
@@ -13,12 +13,12 @@ struct VertexShaderInput{
     float3 normal : NORMAL0;
 };
 
-VertexShaderOutput main(VertexShaderInput input){
+VertexShaderOutput main(VertexShaderInput input,int instanceId : SV_InstanceID){
     VertexShaderOutput output;
+    output.position = mul(input.position, gTransformationMatrices[instanceId].WVP);
     output.texcoord = input.texcoord;
-    output.position = mul(input.position, gTransformationMatrix.WVP);
     //NOTE:法線の変換には拡縮回転情報のみが必要なため取り出す処理を行っている
-    output.normal = normalize(mul(input.normal, (float3x3) gTransformationMatrix.World));
+    output.normal = normalize(mul(input.normal, (float3x3) gTransformationMatrices[instanceId].World));
     
     return output;
 }
