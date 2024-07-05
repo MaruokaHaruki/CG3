@@ -722,8 +722,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	multiplyBlendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
 	multiplyBlendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
 
-
-
 	/// ===RasterrizerStateの設定を行う=== ///
 	//RasterrizerState
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
@@ -733,11 +731,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
 	/// ===Shaderをcompileする=== ///
-	Microsoft::WRL::ComPtr <IDxcBlob> vertexShaderBlob = CompileShader(L"Object3D.VS.hlsl",
+	Microsoft::WRL::ComPtr <IDxcBlob> vertexShaderBlob = CompileShader(L"Particle.VS.hlsl",
 		L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
 	assert(vertexShaderBlob != nullptr);
 
-	Microsoft::WRL::ComPtr <IDxcBlob> pixelShaderBlob = CompileShader(L"Object3D.PS.hlsl",
+	Microsoft::WRL::ComPtr <IDxcBlob> pixelShaderBlob = CompileShader(L"Particle.PS.hlsl",
 		L"ps_6_0", dxcUtils, dxcCompiler, includeHandler);
 	assert(pixelShaderBlob != nullptr);
 
@@ -780,127 +778,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		IID_PPV_ARGS(&graphicsPipelineState)));
 	assert(SUCCEEDED(DXManager->GetHr()));
 
-
-	///----------------------------------------///
-	// VertexResourceを生成(球体)
-	///----------------------------------------///
-
-	//// 分割数
-	//const uint32_t kSubDivision = 16; // 球体の分割数
-
-	//// 頂点リソースの作成
-	//const uint32_t kNumVertices = kSubDivision * kSubDivision * 6; // 全頂点数
-
-	///// ===頂点リソースの作成=== ///
-	//ID3D12Resource* vertexResource = CreateBufferResource(DXManager->GetDevice(), sizeof(VertexData) * kNumVertices); // 頂点リソースのバッファを作成
-
-	///// ===VertexBufferViewを作成する=== ///
-	//D3D12_VERTEX_BUFFER_VIEW vertexBufferView{}; // 頂点バッファビューの構造体
-	//// リソースの先頭のアドレスから使う
-	//vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress(); // GPU上のバッファの先頭アドレスを設定
-	//// 使用するリソースサイズは頂点3つ分のサイズ
-	//vertexBufferView.SizeInBytes = sizeof(VertexData) * kNumVertices; // バッファ全体のサイズを設定
-	//// 1頂点あたりのサイズ
-	//vertexBufferView.StrideInBytes = sizeof(VertexData); // 各頂点のサイズを設定
-
-	///// ===リソースにデータを書き込む=== ///
-	//VertexData* vertexData = nullptr; // 頂点データのポインタを初期化
-	//D3D12_RANGE readRange = {}; // 読み取り範囲
-	//vertexResource->Map(0, &readRange, reinterpret_cast<void**>( &vertexData )); // バッファのメモリをマッピングして書き込み用のポインタを取得
-
-	//const float kLonEvery = float(M_PI) * 2.0f / float(kSubDivision); // 経度のステップサイズ
-	//const float kLatEvery = float(M_PI) / float(kSubDivision); // 緯度のステップサイズ
-
-	//for (uint32_t latIndex = 0; latIndex < kSubDivision; ++latIndex) {
-	//	float lat = -float(M_PI) / 2.0f + latIndex * kLatEvery; // 現在の緯度
-
-	//	for (uint32_t lonIndex = 0; lonIndex < kSubDivision; ++lonIndex) {
-	//		float lon = lonIndex * kLonEvery; // 現在の経度
-	//		uint32_t vertexIndex = ( latIndex * kSubDivision + lonIndex ) * 6; // 頂点インデックスを管理する変数
-
-	//		/// ===1つ目の三角形(左下)=== ///
-	//		// NOTE:position = 頂点データ,texcoord = 画像場所データ,normad = 法線データ
-	//		// A
-	//		vertexData[vertexIndex].position = { cos(lat) * cos(lon), sin(lat), cos(lat) * sin(lon), 1.0f };
-	//		vertexData[vertexIndex].texCoord = { float(lonIndex) / kSubDivision, 1.0f - float(latIndex) / kSubDivision };
-	//		vertexData[vertexIndex].normal.x = vertexData[vertexIndex].position.x;
-	//		vertexData[vertexIndex].normal.y = vertexData[vertexIndex].position.y;
-	//		vertexData[vertexIndex].normal.z = vertexData[vertexIndex].position.z;
-	//		vertexIndex++;
-	//		// B
-	//		vertexData[vertexIndex].position = { cos(lat + kLatEvery) * cos(lon), sin(lat + kLatEvery), cos(lat + kLatEvery) * sin(lon), 1.0f };
-	//		vertexData[vertexIndex].texCoord = { float(lonIndex) / kSubDivision, 1.0f - float(latIndex + 1) / kSubDivision };
-	//		vertexData[vertexIndex].normal.x = vertexData[vertexIndex].position.x;
-	//		vertexData[vertexIndex].normal.y = vertexData[vertexIndex].position.y;
-	//		vertexData[vertexIndex].normal.z = vertexData[vertexIndex].position.z;
-	//		vertexIndex++;
-	//		// C
-	//		vertexData[vertexIndex].position = { cos(lat) * cos(lon + kLonEvery), sin(lat), cos(lat) * sin(lon + kLonEvery), 1.0f };
-	//		vertexData[vertexIndex].texCoord = { float(lonIndex + 1) / kSubDivision, 1.0f - float(latIndex) / kSubDivision };
-	//		vertexData[vertexIndex].normal.x = vertexData[vertexIndex].position.x;
-	//		vertexData[vertexIndex].normal.y = vertexData[vertexIndex].position.y;
-	//		vertexData[vertexIndex].normal.z = vertexData[vertexIndex].position.z;
-	//		vertexIndex++;
-
-	//		/// ===2つ目の三角形(右上)=== ///
-	//		// C
-	//		vertexData[vertexIndex].position = { cos(lat) * cos(lon + kLonEvery), sin(lat), cos(lat) * sin(lon + kLonEvery), 1.0f };
-	//		vertexData[vertexIndex].texCoord = { float(lonIndex + 1) / kSubDivision, 1.0f - float(latIndex) / kSubDivision };
-	//		vertexData[vertexIndex].normal.x = vertexData[vertexIndex].position.x;
-	//		vertexData[vertexIndex].normal.y = vertexData[vertexIndex].position.y;
-	//		vertexData[vertexIndex].normal.z = vertexData[vertexIndex].position.z;
-	//		vertexIndex++;
-	//		// B
-	//		vertexData[vertexIndex].position = { cos(lat + kLatEvery) * cos(lon), sin(lat + kLatEvery), cos(lat + kLatEvery) * sin(lon), 1.0f };
-	//		vertexData[vertexIndex].texCoord = { float(lonIndex) / kSubDivision, 1.0f - float(latIndex + 1) / kSubDivision };
-	//		vertexData[vertexIndex].normal.x = vertexData[vertexIndex].position.x;
-	//		vertexData[vertexIndex].normal.y = vertexData[vertexIndex].position.y;
-	//		vertexData[vertexIndex].normal.z = vertexData[vertexIndex].position.z;
-	//		vertexIndex++;
-	//		// D
-	//		vertexData[vertexIndex].position = { cos(lat + kLatEvery) * cos(lon + kLonEvery), sin(lat + kLatEvery), cos(lat + kLatEvery) * sin(lon + kLonEvery), 1.0f };
-	//		vertexData[vertexIndex].texCoord = { float(lonIndex + 1) / kSubDivision, 1.0f - float(latIndex + 1) / kSubDivision };
-	//		vertexData[vertexIndex].normal.x = vertexData[vertexIndex].position.x;
-	//		vertexData[vertexIndex].normal.y = vertexData[vertexIndex].position.y;
-	//		vertexData[vertexIndex].normal.z = vertexData[vertexIndex].position.z;
-	//		vertexIndex++;
-
-	//	}
-	//}
-
-	///----------------------------------------///
-	// IndexVertexResourceを生成(球体)
-	///----------------------------------------///
-	//// インデックスバッファの作成
-	//const uint32_t kNumIndices = kSubDivision * kSubDivision * 6; // インデックスの数
-	//ID3D12Resource* indexResource = CreateBufferResource(DXManager->GetDevice(), sizeof(uint32_t) * kNumIndices);
-
-	//// インデックスバッファビューの作成
-	//D3D12_INDEX_BUFFER_VIEW indexBufferView{};
-	//indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
-	//indexBufferView.SizeInBytes = sizeof(uint32_t) * kNumIndices;
-	//indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-
-	//// インデックスバッファにデータを書き込む
-	//uint32_t* indexData = nullptr;
-	//indexResource->Map(0, &readRange, reinterpret_cast<void**>( &indexData ));
-
-	//uint32_t indexCounter = 0;
-	//for (uint32_t latIndex = 0; latIndex < kSubDivision; ++latIndex) {
-	//	for (uint32_t lonIndex = 0; lonIndex < kSubDivision; ++lonIndex) {
-	//		uint32_t currentIndex = latIndex * kSubDivision + lonIndex;
-
-	//		// 三角形1のインデックス
-	//		indexData[indexCounter++] = currentIndex * 6 + 0; // A
-	//		indexData[indexCounter++] = currentIndex * 6 + 1; // B
-	//		indexData[indexCounter++] = currentIndex * 6 + 2; // C
-
-	//		// 三角形2のインデックス
-	//		indexData[indexCounter++] = currentIndex * 6 + 3; // C
-	//		indexData[indexCounter++] = currentIndex * 6 + 4; // B
-	//		indexData[indexCounter++] = currentIndex * 6 + 5; // D
-	//	}
-	//}
 
 	///-------------------------------------------/// 
 	///ModelResourceを生成
@@ -1362,7 +1239,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			materialDataSprite->uvTransform = uvTransformMatrix;
 
 			materialData->uvTransform = IdentityMatrix();
-
 
 
 
