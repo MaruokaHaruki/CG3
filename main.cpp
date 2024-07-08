@@ -919,6 +919,36 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>( &vertexData ));
 	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
 
+	///-------------------------------------------/// 
+	///particleModelDataを生成
+	///-------------------------------------------///
+	/// ===板モデルデータを作成===///
+	ModelData particleModelData;
+	particleModelData.vertices.push_back({ .position = {1.0f, 1.0f, 0.0f, 1.0f}, .texCoord = {0.0f, 0.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 左上
+	particleModelData.vertices.push_back({ .position = {-1.0f, 1.0f, 0.0f, 1.0f}, .texCoord = {1.0f, 0.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 右上
+	particleModelData.vertices.push_back({ .position = {1.0f, -1.0f, 0.0f, 1.0f}, .texCoord = {0.0f, 1.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 左下
+	particleModelData.vertices.push_back({ .position = {1.0f, -1.0f, 0.0f, 1.0f}, .texCoord = {0.0f, 1.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 左下
+	particleModelData.vertices.push_back({ .position = {-1.0f, 1.0f, 0.0f, 1.0f}, .texCoord = {1.0f, 0.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 右上
+	particleModelData.vertices.push_back({ .position = {-1.0f, -1.0f, 0.0f, 1.0f}, .texCoord = {1.0f, 1.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 右下
+	particleModelData.material.textureFilePath = "resources/uvChecker.png";
+	const int instanceCount = 10;
+
+	///// ===Instancing用のResourceWVP=== ///
+	////TODO:
+	//// wvp用のリソースを格納する配列
+	//Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource =
+	//	CreateBufferResource(DXManager->GetDevice().Get(), sizeof(TransformationMatrix) * instanceCount);
+	//// データを書き込むためのポインタを格納する配列
+	//TransformationMatrix* instancingData = nullptr;
+	//// 書き込むためのアドレスを取得
+	//instancingResource->Map(0, nullptr, reinterpret_cast<void**>( &instancingData ));
+
+	//for (int i = 0; i < instanceCount; ++i) {
+	//	// 単位行列を書き込む
+	//	instancingData[i].WVP = IdentityMatrix();
+	//	instancingData[i].World = IdentityMatrix();
+	//}
+
 
 	///----------------------------------------///
 	//VettexResourceSpriteを生成(スプライト用)
@@ -1194,9 +1224,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	///----------------------------------------///
 	//メインループ用変数
 	///----------------------------------------///
+	/// ===3Dオブジェクト用=== ///
 	//Transform変数を作る
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-	//カメラの作成
+	transform.rotate.y = -3.01f;
+	transform.rotate.x = 0.5f;
+
+	/// ===カメラの作成=== ///
 	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
 
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
@@ -1218,7 +1252,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	{0.0f,0.0f,0.0f},
 	};
 
-	// ImGuiでブレンドモードを選択するための変数
+	/// ===ImGuiでブレンドモードを選択するための変数=== ///
 	int currentBlendMode = 0;
 	// 前回のブレンドモードを保持する変数
 	int previousBlendMode = -1;
@@ -1325,8 +1359,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
 			}
 			/// ===カメラ処理=== ///
-			transform.rotate.y = -3.01f;
-			transform.rotate.x = 0.5f;
 			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			transformationMatrix.World = worldMatrix;
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
@@ -1382,50 +1414,45 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				previousBlendMode = currentBlendMode;
 			}
 
-			///3D描画
+			/// ===3D描画=== ///
 			DXManager->GetCommandList()->RSSetViewports(1, &viewport);
 			DXManager->GetCommandList()->RSSetScissorRects(1, &scissorRect);
 			DXManager->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
 			DXManager->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
-			DXManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
-			// インデックスバッファをバインド
-			//DXManager->GetCommandList()->IASetIndexBuffer(&indexBufferView);
 			DXManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
-			//テクスチャの切り替え
-			DXManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, usaMonsterBall ? textureSrvHadleGPU2 : textureSrvHadleGPU);
-			// DirectionalLight用のCBV設定 (b1)
-			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-			// 描画コマンド(モデルデータ)
-			DXManager->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());		// DirectionalLight用のCBV設定 (b1)
+
+			//DXManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);													//3D_頂点データ
+			//DXManager->GetCommandList()->IASetIndexBuffer(&indexBufferView);															// 3D_インデックスバッファをバインド
+			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());				//汎用マテリアル
+			//DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());	//3D_WVP用リソース
+			//DXManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, usaMonsterBall ? textureSrvHadleGPU2 : textureSrvHadleGPU);//切り替え用テクスチャ
+			//DXManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHadleGPU);										//汎用テクスチャ
+			
+			// 描画コマンド
+			//DXManager->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);										//3D_モデルデータ
 
 
 
-			///2D描画
+			/// ===2D描画=== ///
 			//NOTE:Material用のCBuffer(色)とSRV(Texture)は3Dの三角形と同じものを使用。無駄を省け。
 			//NOTE:同じものを使用したな？気をつけろ、別々の描画をしたいときは個別のオブジェクトとして宣言し直せ。
 			//Spriteの描画
 			DXManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
-			//Index使用スプライト
-			DXManager->GetCommandList()->IASetIndexBuffer(&indexBufferViewSprite);
-			//マテリアル
-			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
-			//transformationMatrixVBufferの場所を設定
-			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
-			//使用するテクスチャ
-			DXManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHadleGPU);
+			DXManager->GetCommandList()->IASetIndexBuffer(&indexBufferViewSprite);															//Index使用スプライト
+			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());				//マテリアル
+			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());	//transformationMatrixVBufferの場所を設定
+			DXManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHadleGPU);												//使用するテクスチャ
 			//描画！(ドロ‐コール)
-			//DXManager->GetCommandList()->DrawInstanced(6, 1, 0, 0);
-			//描画!
-			//DXManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+			//DXManager->GetCommandList()->DrawInstanced(6, 1, 0, 0);			//通常描画
+			//DXManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);	//インデックス描画
 
 			// ImGui描画
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), DXManager->GetCommandList().Get());
 
 
 
-			// コマンドリストのクローズと実行
+			/// ===コマンドリストのクローズと実行=== ///
 			DXManager->CloseCommandList();
 			DXManager->ExecuteCommandList();
 		}
@@ -1435,41 +1462,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	///----------------------------------------///
 	//開放処理
 	///----------------------------------------///
-
-	/// ===3Dオブジェクト描画=== ///
-	//vertexResource->Release();  // 頂点バッファリソースの解放
-	//indexResource->Release(); //頂点インデックスの解放
-	//graphicsPipelineState->Release();  // グラフィックスパイプラインステートの解放
-	//signatureBlob->Release();  // 署名バイナリの解放
-	//if (errorBlob) {
-		//errorBlob->Release();  // エラーメッセージバッファの解放
-	//}
-	//rootSignature->Release();  // ルートシグネチャの解放
-	//pixelShaderBlob->Release();  // ピクセルシェーダーバイナリの解放
-	//vertexShaderBlob->Release();  // 頂点シェーダーバイナリの解放
-
-	/// ===深度バッファ=== ///
-	//dsvDescriptorHeap->Release();  // 深度ステンシルビュー用ディスクリプタヒープの解放
-	//depthStencilResource->Release();  // 深度ステンシルバッファリソースの解放
-
-	/// ===マテリアル=== ///
-	//materialResource->Release();  // マテリアルリソースの解放
-
-	/// ===並行光源=== ///
-	//directionalLightResource->Release();
-
-	/// ===wvp=== ///
-	//transformationMatrixResource->Release();  // ワールド・ビュー・プロジェクション行列リソースの解放
-
-	/// ===Resource(Texture)=== ///
-	//textureResource->Release();  // テクスチャリソースの解放
-	//textureResource2->Release();  // 2番目のテクスチャリソースの解放
-
-	/// ===スプライト=== ///
-	//transformationMatrixResourceSprite->Release();  // スプライト用変換行列リソースの解放
-	//materialResourceSprite->Release();  // スプライト用マテリアルリソースの解放
-	//vertexResouceSprite->Release();  // スプライト用頂点バッファリソースの解放
-	//indexResourceSprite->Release();
 
 	/// ===ImGuiの終了処理=== ///
 	//srvDescriptorHeap->Release();  // シェーダーリソースビュー用ディスクリプタヒープの解放
