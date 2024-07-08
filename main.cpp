@@ -697,8 +697,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	#pragma endregion
 
 
-
-
 	/// ===InputLayoutの設定を行う=== ///
 	//InputLayout
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
