@@ -1084,8 +1084,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialData->uvTransform = IdentityMatrix();
 
 	///----------------------------------------///
-//マテリアル用のリソース(3D)
-///----------------------------------------///
+	//マテリアル用のリソース(パーティクル)
+	///----------------------------------------///
 	Microsoft::WRL::ComPtr <ID3D12Resource> materialResourceParticle = CreateBufferResource(DXManager->GetDevice().Get(), sizeof(Material));
 	//マテリアルデータ
 	Material* materialDataParticle = nullptr;
@@ -1214,6 +1214,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHadleGPU3 = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 2);
 	//SRVの生成
 	DXManager->GetDevice()->CreateShaderResourceView(textureResourceParticle.Get(), &srvDesc3, textureSrvHadleCPU3);
+
+	/// ===三枚目(Particle用)=== ///
+	////TODO:
+	//D3D12_SHADER_RESOURCE_VIEW_DESC instancindSrvDesc{};
+	//instancindSrvDesc.Format = DXGI_FORMAT_UNKNOWN;;
+	//instancindSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	//instancindSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;//2Dテクスチャ
+	//instancindSrvDesc.Buffer.FirstElement = 0;
+	//instancindSrvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+	//instancindSrvDesc.Buffer.NumElements = instanceCount;
+	//instancindSrvDesc.Buffer.StructureByteStride = sizeof(TransformationMatrix);
+	////SRVを作成するDescriptorHeapの場所を決める
+	//D3D12_CPU_DESCRIPTOR_HANDLE instancindSrvHadleCPU = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 3);
+	//D3D12_GPU_DESCRIPTOR_HANDLE instancindSrvHadleGPU = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 3);
+	////SRVの生成
+	//DXManager->GetDevice()->CreateShaderResourceView(instancingResource.Get(), &instancindSrvDesc, instancindSrvHadleCPU);
 
 
 	///----------------------------------------///
