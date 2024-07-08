@@ -1280,6 +1280,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	transform.rotate.y = -3.01f;
 	transform.rotate.x = 0.5f;
 
+	/// ===パーティクル用=== ///
+	Transform transforms[instanceCount];
+	for (int index = 0; index < instanceCount; ++index) {
+		transforms[index].scale = { 1.0f,1.0f,1.0f };
+		transforms[index].rotate = { 0.0f,-2.5,0.0f };
+		transforms[index].translate = { index * 0.1f,index * 0.1f,index * 0.1f };
+	}
+
 	/// ===カメラの作成=== ///
 	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
 
