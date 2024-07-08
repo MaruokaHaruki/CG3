@@ -1114,14 +1114,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
 
 	//SRVを作成するDescriptorHeapの場所を決める
-	//NOTE:関数化したため消去
-	//D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHadleCPU = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	//D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHadleGPU = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-	////先頭はImGuiが使っているのでその次を使う
-	//textureSrvHadleCPU.ptr += DXManager->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	//textureSrvHadleGPU.ptr += DXManager->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-	//SRVを作成するDescriptorHeapの場所を決める
 	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHadleCPU = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 1);
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHadleGPU = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 1);
 	//SRVの生成
@@ -1396,7 +1388,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DXManager->GetCommandList()->RSSetViewports(1, &viewport);
 			DXManager->GetCommandList()->RSSetScissorRects(1, &scissorRect);
 			DXManager->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
-
 			DXManager->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
 			DXManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
 			// インデックスバッファをバインド
@@ -1408,12 +1399,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DXManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, usaMonsterBall ? textureSrvHadleGPU2 : textureSrvHadleGPU);
 			// DirectionalLight用のCBV設定 (b1)
 			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-			// 描画コマンド(頂点データ)
-			//DXManager->GetCommandList()->DrawInstanced(kNumVertices, 1, 0, 0);
-			// 描画コマンド(インデックスデータ)
-			//DXManager->GetCommandList()->DrawIndexedInstanced(kNumIndices, 1, 0, 0, 0);
 			// 描画コマンド(モデルデータ)
 			DXManager->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+
 
 
 			///2D描画
@@ -1432,7 +1420,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//描画！(ドロ‐コール)
 			//DXManager->GetCommandList()->DrawInstanced(6, 1, 0, 0);
 			//描画!
-			//DXManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+			DXManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 			// ImGui描画
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), DXManager->GetCommandList().Get());
