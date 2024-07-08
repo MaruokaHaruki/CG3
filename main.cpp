@@ -1469,7 +1469,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());				//マテリアル
 			//DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());	//WVP用リソース
 			//DXManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, usaMonsterBall ? textureSrvHadleGPU2 : textureSrvHadleGPU);//切り替え用テクスチャ
-			//DXManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHadleGPU);											//汎用テクスチャ
+			//DXManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHadleGPU);										//汎用テクスチャ
 			
 			///パーティクル用
 			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());//今他人の借りてるぞ
@@ -1486,11 +1486,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//NOTE:Material用のCBuffer(色)とSRV(Texture)は3Dの三角形と同じものを使用。無駄を省け。
 			//NOTE:同じものを使用したな？気をつけろ、別々の描画をしたいときは個別のオブジェクトとして宣言し直せ。
 			//Spriteの描画
-			DXManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
-			DXManager->GetCommandList()->IASetIndexBuffer(&indexBufferViewSprite);															//Index使用スプライト
-			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());				//マテリアル
-			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());	//transformationMatrixVBufferの場所を設定
-			DXManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHadleGPU);												//使用するテクスチャ
+			//DXManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+			//DXManager->GetCommandList()->IASetIndexBuffer(&indexBufferViewSprite);															//Index使用スプライト
+			//DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());				//マテリアル
+			//DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());	//transformationMatrixVBufferの場所を設定
+			//DXManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHadleGPU);												//使用するテクスチャ
 			//描画！(ドロ‐コール)
 			//DXManager->GetCommandList()->DrawInstanced(6, 1, 0, 0);			//通常描画
 			//DXManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);	//インデックス描画
