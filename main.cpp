@@ -1356,8 +1356,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			materialData->uvTransform = IdentityMatrix();
 
 
-
-
 			///-------------------------------------------/// 
 			///コマンド
 			///-------------------------------------------///
@@ -1420,7 +1418,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//描画！(ドロ‐コール)
 			//DXManager->GetCommandList()->DrawInstanced(6, 1, 0, 0);
 			//描画!
-			DXManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+			//DXManager->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 			// ImGui描画
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), DXManager->GetCommandList().Get());
