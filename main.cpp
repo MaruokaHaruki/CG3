@@ -570,10 +570,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	//descriptorRange[1].BaseShaderRegister = 0; // CBVがb0から始まる
-	//descriptorRange[1].NumDescriptors = 3; // b0, b1, b2
-	//descriptorRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-	//descriptorRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	///Particle用
+	D3D12_DESCRIPTOR_RANGE descriptorRangeForInstancing[1] = {};
+	descriptorRangeForInstancing[0].BaseShaderRegister = 0; // から始まる
+	descriptorRangeForInstancing[0].NumDescriptors = 1; //
+	descriptorRangeForInstancing[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	descriptorRangeForInstancing[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	/// ===RootParameter作成=== ///
 	D3D12_ROOT_PARAMETER rootParameters[4] = {};
