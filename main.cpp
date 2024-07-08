@@ -922,16 +922,27 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	///-------------------------------------------/// 
 	///particleModelDataを生成
 	///-------------------------------------------///
-	/// ===板モデルデータを作成===///
-	ModelData particleModelData;
-	particleModelData.vertices.push_back({ .position = {1.0f, 1.0f, 0.0f, 1.0f}, .texCoord = {0.0f, 0.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 左上
-	particleModelData.vertices.push_back({ .position = {-1.0f, 1.0f, 0.0f, 1.0f}, .texCoord = {1.0f, 0.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 右上
-	particleModelData.vertices.push_back({ .position = {1.0f, -1.0f, 0.0f, 1.0f}, .texCoord = {0.0f, 1.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 左下
-	particleModelData.vertices.push_back({ .position = {1.0f, -1.0f, 0.0f, 1.0f}, .texCoord = {0.0f, 1.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 左下
-	particleModelData.vertices.push_back({ .position = {-1.0f, 1.0f, 0.0f, 1.0f}, .texCoord = {1.0f, 0.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 右上
-	particleModelData.vertices.push_back({ .position = {-1.0f, -1.0f, 0.0f, 1.0f}, .texCoord = {1.0f, 1.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 右下
-	particleModelData.material.textureFilePath = "resources/uvChecker.png";
 	const int instanceCount = 10;
+	/// ===板モデルデータを作成===///
+	ModelData modelDataParticle;
+	modelDataParticle.vertices.push_back({ .position = {1.0f, 1.0f, 0.0f, 1.0f}, .texCoord = {0.0f, 0.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 左上
+	modelDataParticle.vertices.push_back({ .position = {-1.0f, 1.0f, 0.0f, 1.0f}, .texCoord = {1.0f, 0.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 右上
+	modelDataParticle.vertices.push_back({ .position = {1.0f, -1.0f, 0.0f, 1.0f}, .texCoord = {0.0f, 1.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 左下
+	modelDataParticle.vertices.push_back({ .position = {1.0f, -1.0f, 0.0f, 1.0f}, .texCoord = {0.0f, 1.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 左下
+	modelDataParticle.vertices.push_back({ .position = {-1.0f, 1.0f, 0.0f, 1.0f}, .texCoord = {1.0f, 0.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 右上
+	modelDataParticle.vertices.push_back({ .position = {-1.0f, -1.0f, 0.0f, 1.0f}, .texCoord = {1.0f, 1.0f}, .normal = {0.0f, 0.0f, 1.0f} }); // 右下
+	modelDataParticle.material.textureFilePath = "resources/uvChecker.png";
+	/// ===頂点リソースを作る=== ///
+	Microsoft::WRL::ComPtr <ID3D12Resource> vertexResourceParticle = CreateBufferResource(DXManager->GetDevice().Get(), sizeof(VertexData) * modelDataParticle.vertices.size());
+	/// ===頂点バッファビューを作成する=== ///
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewParticle{};
+	vertexBufferViewParticle.BufferLocation = vertexResource->GetGPUVirtualAddress();				//リソースの先頭アドレスから使う
+	vertexBufferViewParticle.SizeInBytes = UINT(sizeof(VertexData) * modelDataParticle.vertices.size());	//使用するリソースのサイズは頂点サイズ
+	vertexBufferViewParticle.StrideInBytes = sizeof(VertexData);
+	/// ===頂点リソースにデータを書き込む=== ///
+	VertexData* vertexDataParticle = nullptr;
+	vertexResource->Map(0, nullptr, reinterpret_cast<void**>( &vertexDataParticle ));
+	std::memcpy(vertexDataParticle, modelDataParticle.vertices.data(), sizeof(VertexData)* modelDataParticle.vertices.size());
 
 	///// ===Instancing用のResourceWVP=== ///
 	////TODO:
@@ -1063,7 +1074,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	*materialData = material;
 	materialData->uvTransform = IdentityMatrix();
 
-
+	///----------------------------------------///
+//マテリアル用のリソース(3D)
+///----------------------------------------///
+	Microsoft::WRL::ComPtr <ID3D12Resource> materialResourceParticle = CreateBufferResource(DXManager->GetDevice().Get(), sizeof(Material));
+	//マテリアルデータ
+	Material* materialDataParticle = nullptr;
+	//マテリアルデータ書き込み用変数
+	Material materialParticle = { {1.0f, 1.0f, 1.0f, 1.0f},true };
+	//書き込むためのアドレス取得
+	materialResourceParticle->Map(0, nullptr, reinterpret_cast<void**>( &materialDataParticle ));
+	//色の書き込み
+	*materialDataParticle = materialParticle;
+	materialDataParticle->uvTransform = IdentityMatrix();
 
 	///----------------------------------------///
 	//マテリアル用のリソース(2D)
@@ -1131,6 +1154,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Microsoft::WRL::ComPtr <ID3D12Resource> textureResource2 = CreateTextureResource(DXManager->GetDevice(), metadata2);
 	UploadTextureData(textureResource2, mipImages2);
 
+	/// ===三枚目=== ///
+	DirectX::ScratchImage mipImagesParticle = LoadTexture(modelDataParticle.material.textureFilePath);
+	const DirectX::TexMetadata& metadataParticle = mipImagesParticle.GetMetadata();
+	Microsoft::WRL::ComPtr <ID3D12Resource> textureResourceParticle = CreateTextureResource(DXManager->GetDevice(), metadataParticle);
+	UploadTextureData(textureResourceParticle, mipImagesParticle);
+
 
 	///----------------------------------------///
 	//実際にShaderResourceViewを作る
@@ -1163,7 +1192,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//SRVの生成
 	DXManager->GetDevice()->CreateShaderResourceView(textureResource2.Get(), &srvDesc2, textureSrvHadleCPU2);
 
+	/// ===三枚目=== ///
+	//metaDataを元にSRVの設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc3{};
+	srvDesc3.Format = metadata.format;
+	srvDesc3.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc3.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;//2Dテクスチャ
+	srvDesc3.Texture2D.MipLevels = UINT(metadataParticle.mipLevels);
 
+	//SRVを作成するDescriptorHeapの場所を決める
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHadleCPU3 = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 2);
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHadleGPU3 = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 2);
+	//SRVの生成
+	DXManager->GetDevice()->CreateShaderResourceView(textureResourceParticle.Get(), &srvDesc3, textureSrvHadleCPU3);
 
 
 	///----------------------------------------///
@@ -1422,16 +1463,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DXManager->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());		// DirectionalLight用のCBV設定 (b1)
 
-			//DXManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);													//3D_頂点データ
-			//DXManager->GetCommandList()->IASetIndexBuffer(&indexBufferView);															// 3D_インデックスバッファをバインド
-			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());				//汎用マテリアル
-			//DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());	//3D_WVP用リソース
+			///3Dモデル
+			//DXManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);													//頂点データ
+			//DXManager->GetCommandList()->IASetIndexBuffer(&indexBufferView);															//3D_インデックスバッファをバインド
+			//DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());				//マテリアル
+			//DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());	//WVP用リソース
 			//DXManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, usaMonsterBall ? textureSrvHadleGPU2 : textureSrvHadleGPU);//切り替え用テクスチャ
-			//DXManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHadleGPU);										//汎用テクスチャ
+			//DXManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHadleGPU);											//汎用テクスチャ
 			
+			///パーティクル用
+			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());//今他人の借りてるぞ
+			DXManager->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferViewParticle);										//頂点データ
+			DXManager->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResourceParticle->GetGPUVirtualAddress());	//マテリアル
+			DXManager->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHadleGPU3);									//テクスチャ
+
 			// 描画コマンド
 			//DXManager->GetCommandList()->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);										//3D_モデルデータ
-
+			DXManager->GetCommandList()->DrawInstanced(UINT(modelDataParticle.vertices.size()), instanceCount, 0, 0);					//Particle_モデルデータ
 
 
 			/// ===2D描画=== ///
