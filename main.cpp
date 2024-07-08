@@ -1428,6 +1428,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			transformationMatrix.WVP = worldViewProjectionMatrix;
 			*transformationMatrixData = transformationMatrix;
 
+			/// ===パーティクル処理=== ///
+			//TODO:
+			//for (int index = 0; index < instanceCount; ++index) {
+			//	Matrix4x4 worldMatrixInstancing = MakeAffineMatrix(transforms[index].scale, transforms[index].rotate, transforms[index].translate);
+			//	Matrix4x4 worldViewProjectionMatrix = MultiplyMatrix(worldMatrixInstancing, projectionMatrix);
+			//	instancingData[index].WVP = worldViewProjectionMatrix;
+			//	instancingData[index].World = worldMatrixInstancing;
+			//}
+
+
+
 			/// ===2Dオブジェクト処理=== ///
 			//sprite用のWorldViewProjectionMatrixを作る
 			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
